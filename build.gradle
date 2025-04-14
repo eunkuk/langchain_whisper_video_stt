@@ -1,0 +1,60 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.example'
+version = '1.0-SNAPSHOT'
+sourceCompatibility = '11'
+targetCompatibility = '11'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // LangChain4j - Java implementation of LangChain
+    implementation 'dev.langchain4j:langchain4j:0.26.0'
+
+    // OpenAI integration for Whisper API
+    implementation 'dev.langchain4j:langchain4j-open-ai:0.26.0'
+
+    // Direct OpenAI API client
+    implementation 'com.theokanning.openai-gpt3-java:service:0.18.2'
+
+    // JavaCV for video processing
+    implementation 'org.bytedeco:javacv-platform:1.5.9'
+
+    // SLF4J API and Simple binding for logging
+    implementation 'org.slf4j:slf4j-api:2.0.7'
+    implementation 'org.slf4j:slf4j-simple:2.0.7'
+}
+
+application {
+    mainClass = 'com.example.VideoSTT'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+// Create a fat JAR with all dependencies
+tasks.register('fatJar', Jar) {
+    archiveClassifier = 'with-dependencies'
+
+    from sourceSets.main.output
+
+    dependsOn configurations.runtimeClasspath
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+
+    manifest {
+        attributes 'Main-Class': 'com.example.VideoSTT'
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+// Make the jar task depend on the fatJar task
+tasks.jar.finalizedBy(tasks.fatJar)
